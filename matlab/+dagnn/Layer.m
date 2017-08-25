@@ -1,8 +1,7 @@
 classdef Layer < handle
   %LAYER Base class for a network layer in a DagNN
 
-%  properties (Access = {?dagnn.DagNN, ?dagnn.Layer}, Hidden, Transient)
-  properties (Access = public, Hidden, Transient)
+  properties (Access = {?dagnn.DagNN, ?dagnn.Layer}, Hidden, Transient)
     net
     layerIndex
   end
@@ -68,10 +67,7 @@ classdef Layer < handle
       % subnetworks by specifying only some of the variables as input --
       % however it is somewhat dangerous as inputs could be legitimaly
       % empty)
-%   #    if any(cellfun(@isempty, inputs)), return ; end
-      if any(cellfun(@isempty, inputs)) || isempty(inputs), 
-          return ;
-      end
+      if any(cellfun(@isempty, inputs)), return ; end
 
       % clear inputs if not needed anymore
       for v = in
@@ -82,17 +78,14 @@ classdef Layer < handle
           end
         end
       end
-      
 
       %[net.vars(out).value] = deal([]) ;
 
       % call the simplified interface
-          % call the simplified interface
       outputs = obj.forward(inputs, {net.params(par).value}) ;
       for oi = 1:numel(out)
         net.vars(out(oi)).value = outputs{oi};
       end
-
     end
 
     function backwardAdvanced(obj, layer)
@@ -109,16 +102,10 @@ classdef Layer < handle
 
       inputs = {net.vars(in).value} ;
       derOutputs = {net.vars(out).der} ;
+      for i = 1:numel(derOutputs)
+        if isempty(derOutputs{i}), return ; end
+      end
 
-%       for i = 1:numel(derOutputs)
-%         if isempty(derOutputs{i}), return ; end
-%       end
-        if all(cellfun(@isempty,derOutputs)), return ; end
-        if any(cellfun(@isempty, inputs)), 
-%             fprintf('Empty input for layer "%s".\n', layer.name);
-            return ;
-        end
-        
       if net.conserveMemory
         % clear output variables (value and derivative)
         % unless precious
@@ -138,7 +125,7 @@ classdef Layer < handle
 
       % accumuate derivatives
       for i = 1:numel(in)
-        v = in(i) ; 
+        v = in(i) ;
         if net.numPendingVarRefs(v) == 0 || isempty(net.vars(v).der)
           net.vars(v).der = derInputs{i} ;
         elseif ~isempty(derInputs{i})
@@ -149,7 +136,6 @@ classdef Layer < handle
 
       for i = 1:numel(par)
         p = par(i) ;
-        if net.params(p).learningRate  == 0, continue; end
         if (net.numPendingParamRefs(p) == 0 && ~net.accumulateParamDers) ...
               || isempty(net.params(p).der)
           net.params(p).der = derParams{i} ;
@@ -164,10 +150,10 @@ classdef Layer < handle
           if ~isempty(net.parameterServer) && ~net.holdOn
             net.parameterServer.pushWithIndex(p, net.params(p).der) ;
             net.params(p).der = [] ;
+%             fprintf('pushing param %s\n',net.params(p).name);
           end
         end
       end
-      
     end
 
     function rfs = getReceptiveFields(obj)
@@ -212,9 +198,8 @@ classdef Layer < handle
       for f = fieldnames(s)'
         fc = char(f) ;
         if ~isprop(obj, fc)
-          fprintf('No property `%s` for a layer of type `%s`.\n', ...
+          error('No property `%s` for a layer of type `%s`.', ...
             fc, class(obj));
-          continue;
         end;
         obj.(fc) = s.(fc) ;
       end

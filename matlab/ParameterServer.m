@@ -26,7 +26,7 @@ classdef ParameterServer < handle
           obj.method = 'tmove' ;
       end
       obj.pinnedMemory = true ;
-      obj.inplace = false ;
+      obj.inplace = true ;
       obj.tmoveOpts = { } ;
       obj = vl_argparse(obj, varargin) ;
 
@@ -114,7 +114,6 @@ classdef ParameterServer < handle
           if obj.params(p).isGPU && obj.inplace
             vl_tmove('pull', obj.params(p).name, 'inplace', obj.tmoveOpts{:}) ;
             value = obj.params(p).value ;
-            sum(value(:))
           else
             value = vl_tmove('pull', obj.params(p).name, obj.tmoveOpts{:}) ;
           end
@@ -204,9 +203,6 @@ classdef ParameterServer < handle
                labindex, numlabs, ...
                'prefix', obj.prefix, ...
                obj.tmoveOpts{:}) ;
-       disp(obj)
-%        numlabs
-%        labindex
     end
 
     function stopWithTMove(obj)
