@@ -65,9 +65,6 @@ classdef DagNN < matlab.mixin.Copyable
     accumulateParamDers = false
     conserveMemory = true
     parameterServer = []
-    visualize = false
-    backpropDepth = []
-    cudnnWorkspaceLimit = []
   end
 
   properties (Transient, SetAccess = private, GetAccess = public)
@@ -139,18 +136,16 @@ classdef DagNN < matlab.mixin.Copyable
 
     % Manipualte the DagNN
     addLayer(obj, name, block, inputs, outputs, params, varargin)
-    addLayerAt(obj, f, name, block, inputs, outputs, params)
-    removeLayer(obj, name, chainInPuts)
+    removeLayer(obj, name)
     setLayerInputs(obj, leyer, inputs)
     setLayerOutput(obj, layer, outputs)
     setLayerParams(obj, layer, params)
     renameVar(obj, oldName, newName, varargin)
-    renameParam(obj, oldName, newName)
     rebuild(obj)
 
     % Process data with the DagNN
+    initParams(obj)
     eval(obj, inputs, derOutputs, varargin)
-    initParams(obj, onlyEmptyPars)
 
     % Get information about the DagNN
     varSizes = getVarSizes(obj, inputSizes)
@@ -158,16 +153,7 @@ classdef DagNN < matlab.mixin.Copyable
     % ---------------------------------------------------------------------
     %                                                           Access data
     % ---------------------------------------------------------------------
-    function removeLayersAfter(obj,l)
 
-      index  = find(obj.executionOrder == l);
-
-
-      obj.layers(obj.executionOrder(index+1:end)) = [] ;
-      obj.rebuild() ;
-
-    end
-    
     function inputs = getInputs(obj)
     %GETINPUTS Get the names of the input variables
     %   INPUTS = GETINPUTS(obj) returns a cell array containing the name
@@ -395,13 +381,10 @@ classdef DagNN < matlab.mixin.Copyable
 
   methods (Static)
     obj = fromSimpleNN(net, varargin)
-    obj = setLrWd(net, varargin)
-    obj = insertLossLayers(net, varargin)
     obj = loadobj(s)
   end
 
-%   methods (Access = {?dagnn.DagNN, ?dagnn.Layer})
- methods (Access = public)
+  methods (Access = {?dagnn.DagNN, ?dagnn.Layer})
     function v = addVar(obj, name)
     %ADDVAR  Add a variable to the DaG
     %   V = ADDVAR(obj, NAME) adds a varialbe with the specified

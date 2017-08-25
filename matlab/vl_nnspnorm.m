@@ -1,7 +1,7 @@
 function y = vl_nnspnorm(x, param, dzdy)
 %VL_NNSPNORM CNN spatial normalization.
 %   Y = VL_NNSPNORM(X, PARAM) computes the spatial normalization of
-%   the data X with parameters PARAM = [PH PW ALPHA BETA, c]. Here PH and
+%   the data X with parameters PARAM = [PH PW ALPHA BETA]. Here PH and
 %   PW define the size of the spatial neighbourhood used for
 %   nomalization.
 %
@@ -24,10 +24,8 @@ function y = vl_nnspnorm(x, param, dzdy)
 pad = floor((param(1:2)-1)/2) ;
 pad = [pad ; param(1:2)-1-pad] ;
 
-if numel(param) < 5, C = 1; else, C=param(5); end;
-
 n2 = vl_nnpool(x.*x, param(1:2), 'method', 'avg', 'pad', pad) ;
-f = C + param(3) * n2 ;
+f = 1 + param(3) * n2 ;
 
 if nargin <= 2 || isempty(dzdy)
   y = f.^(-param(4)) .* x ;

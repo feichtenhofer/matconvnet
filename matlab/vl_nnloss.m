@@ -138,8 +138,6 @@ opts.classWeights = [] ;
 opts.threshold = 0 ;
 opts.loss = 'softmaxlog' ;
 opts.topK = 5 ;
-opts.label_smooth = [];
-opts.aggregate = true;
 opts = vl_argparse(opts, varargin, 'nonrecursive') ;
 
 inputSize = [size(x,1) size(x,2) size(x,3) size(x,4)] ;
@@ -177,7 +175,7 @@ assert(isequal(labelSize(1:2), inputSize(1:2))) ;
 assert(labelSize(4) == inputSize(4)) ;
 instanceWeights = [] ;
 switch lower(opts.loss)
-  case {'classerror', 'top5classerror', 'topkerror', 'log', 'softmaxlog', 'mhinge', 'mshinge'}
+  case {'classerror', 'topkerror', 'log', 'softmaxlog', 'mhinge', 'mshinge'}
     % there must be one categorical label per prediction vector
     assert(labelSize(3) == 1) ;
 
@@ -195,7 +193,7 @@ switch lower(opts.loss)
       % null labels denote instances that should be skipped
       instanceWeights = cast(c ~= 0) ;
     end
-  case 'inner'
+
   otherwise
     error('Unknown loss ''%s''.', opts.loss) ;
 end
@@ -237,11 +235,6 @@ if nargin <= 2 || isempty(dzdy)
       t = 1 - sum(bsxfun(@eq, c, predictions(:,:,1:opts.topK,:)), 3) ;
     case 'log'
       t = - log(x(ci)) ;
-    case 'top5classerror'
-      [~,predictions] = sort(X, 3, 'descend') ;
-      err = ~bsxfun(@eq, predictions, reshape(c, 1, 1, 1, [])) ;
-%       err1 = sum(sum(sum(err(:,:,1,:)))) ;
-      t = single(min(err(:,:,1:5,:),[],3)) ;
     case 'softmaxlog'
       Xmax = max(x,[],3) ;
       ex = exp(bsxfun(@minus, x, Xmax)) ;
@@ -263,20 +256,11 @@ if nargin <= 2 || isempty(dzdy)
       t = b + log(exp(-b) + exp(a-b)) ;
     case 'hinge'
       t = max(0, 1 - c.*x) ;
-    case 'distance'
-      t = (x - c).^2 ; 
-      % y = sum(sum(sum(sum(d.*d.*mask)))) ;
-    case 'inner' % product with a constant in instanceWeights
-      t = instanceWeights.*x; instanceWeights = [];
   end
   if ~isempty(instanceWeights)
     y = instanceWeights(:)' * t(:) ;
   else
-    if opts.aggregate
-      y = sum(t(:));
-    else
-      y = t;
-    end
+    y = sum(t(:));
   end
 else
   if ~isempty(instanceWeights)
@@ -316,10 +300,6 @@ else
       y = - dzdy .* c ./ (1 + exp(c.*x)) ;
     case 'hinge'
       y = - dzdy .* c .* (c.*x < 1) ;
-    case 'distance'
-      y = dzdy * 2 * (x - c)  ;
-    case 'inner'
-      y = dzdy  ;
   end
 end
 

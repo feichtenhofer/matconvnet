@@ -196,7 +196,6 @@ for wi=1:numel(fields)
             case 'type'
               switch ly.type
                 case 'normalize', s='norm';
-                case 'normalizelp', s='normlp' ;
                 case 'pool'
                   if strcmpi(ly.method,'avg'), s='apool'; else s='mpool'; end
                 case 'softmax', s='softmx' ;
@@ -253,7 +252,6 @@ for wi=1:numel(fields)
               end
               if isfield(ly, 'biases') ;
                 a = a + numel(ly.biases) * 4 ;
-                fprintf('%s: %.2g parameters\n', ly.name, numel(ly.filters)+ numel(ly.biases) ) ;
               end
               s = pmem(a) ;
               wmem = wmem + a ;

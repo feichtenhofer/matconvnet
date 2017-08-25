@@ -1,4 +1,4 @@
-function T = vl_tshow(T, varargin)
+function vl_tshow(T, varargin)
 %VL_TSHOW Visualize a 4D tensor.
 %   VL_TSHOW(T) shows the 4D tensor T in the current figure.
 %

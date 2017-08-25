@@ -2,7 +2,7 @@ function vl_test_imreadjpeg
 % VL_TEST_IMREADJPEG
 
 % Test basic file reading capability
-parfor t=1:6
+for t=1:6
   files{t} = which(sprintf('office_%d.jpg', t)) ;
 end
 ims = vl_imreadjpeg(files) ;

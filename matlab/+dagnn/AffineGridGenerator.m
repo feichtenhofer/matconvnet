@@ -35,22 +35,13 @@ classdef AffineGridGenerator < dagnn.Layer
 
       % reshape the tfm params into matrices:
       A = inputs{1};
-      if size(A,1) > 1, A = mean(A,1); end
-      if size(A,2) > 1, A = mean(A,2); end
-     
-          
       nbatch = size(A,4);
       A = reshape(A, 2,3,nbatch);
       L = A(:,1:2,:);
       L = reshape(L,2,2*nbatch); % linear part
-      
-      if numel(inputs) > 1
-          obj.Ho = size(inputs{2},1);
-          obj.Wo = size(inputs{2},2);
-      end
 
       % generate the grid coordinates:
-      if isempty(obj.xxyy) || numel(inputs) > 1
+      if isempty(obj.xxyy)
         obj.initGrid(useGPU);
       end
 
@@ -90,13 +81,7 @@ classdef AffineGridGenerator < dagnn.Layer
       dA(:,3,:) = dt;
 
       dA = reshape(dA, size(inputs{1}));
-        
-      if numel(inputs) > 1
-          derInputs = {dA []};
-      else
-          derInputs = {dA};
-      end      
-      
+      derInputs = {dA};
       derParams = {};
     end
 

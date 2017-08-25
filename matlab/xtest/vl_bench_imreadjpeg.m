@@ -35,7 +35,7 @@ for preallocate = [true, false]
     vl_imreadjpeg(files, 'prefetch', opts{:}) ;
     prefetch(t) = toc ;
     fprintf('   done [pause 6]\n') ;
-    pause(1)
+    pause(6)
 
     fprintf('prefetched read\n') ;
     clear ims_ ; % do not accoutn for the time requried to delete this

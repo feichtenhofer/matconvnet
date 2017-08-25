@@ -10,7 +10,6 @@ function a = vl_taccum(alpha, a, beta, b)
 % This file is part of the VLFeat library and is made available under
 % the terms of the BSD license (see the COPYING file).
 
-
 if isscalar(a) || isscalar(b)
   a = alpha * a + beta * b ;
   return ;

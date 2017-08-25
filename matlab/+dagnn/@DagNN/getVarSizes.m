@@ -40,6 +40,4 @@ for layer = obj.layers(obj.executionOrder)
   in = layer.inputIndexes ;
   out = layer.outputIndexes ;
   sizes(out) = layer.block.getOutputSizes(sizes(in)) ;
-  sz_out = sizes(out); 
-
 end

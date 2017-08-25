@@ -123,14 +123,6 @@ for l = 1:numel(net.layers)
       block = LRN() ;
       block.param = net.layers{l}.param ;
 
-    case {'normalizelp'}
-      block = NormalizeLp() ;
-      block.epsilon = net.layers{l}.epsilon ;
-      block.p = net.layers{l}.p ;
-      block.spatial = net.layers{l}.spatial ;
-      block.standardize = net.layers{l}.standardize ;
-      block.subtractMean = net.layers{l}.subtractMean ;
-
     case {'dropout'}
       block = DropOut() ;
       block.rate = net.layers{l}.rate ;
@@ -146,13 +138,7 @@ for l = 1:numel(net.layers)
       block = SoftMax() ;
 
     case {'softmaxloss'}
-      if isfield(net.layers{l-1}, 'name')
-        name = ['loss_' net.layers{l-1}.name] ;
-      else
-        name = sprintf('loss%d',l) ;
-      end
       block = Loss('loss', 'softmaxlog') ;
-
       % The loss has two inputs
       inputs{2} = getNewVarName(obj, 'label') ;
 

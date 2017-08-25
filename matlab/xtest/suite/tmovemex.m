@@ -12,8 +12,7 @@ classdef tmovemex < matlab.unittest.TestCase
     function openParpool(test)
       test.numLabs = 4 ;
       if ~isempty(gcp('nocreate'))
-        %delete(gcp) ;
-        return;
+        delete(gcp) ;
       end
       cl = parcluster('local');
       cl.NumWorkers = test.numLabs ;
@@ -23,9 +22,9 @@ classdef tmovemex < matlab.unittest.TestCase
 
   methods (TestClassTeardown)
     function closeParpool(test)
-%       if ~isempty(gcp('nocreate'))
-%         delete(gcp) ;
-%       end
+      if ~isempty(gcp('nocreate'))
+        delete(gcp) ;
+      end
     end
   end
 
@@ -88,7 +87,6 @@ classdef tmovemex < matlab.unittest.TestCase
                 'double', [3 4 5 6],   'x2', 'gpu' } ;
       gpuDevice(1) ;
       spmd
-        vl_setupnn;
         for i = 1:size(format,1)
           x{i} = tmovemex.makeArray(format(i,:)) + labindex ;
         end
