@@ -13,6 +13,8 @@ end
 
 net = dagnn.DagNN.loadobj(load(modelPath)) ;
 
+  net = dagnn.DagNN.loadobj(net);
+net = cnn_imagenet_deploy(net)
 im = imread('peppers.png') ;
 im_ = single(im) ; % note: 255 range
 im_ = imresize(im_, net.meta.normalization.imageSize(1:2)) ;
@@ -21,7 +23,7 @@ net.eval({'data', im_}) ;
 
 % show the classification result
 scores = squeeze(gather(net.vars(end).value)) ;
-[bestScore, best] = max(scores) ;
+[bestScore, best] = max(scores) 
 figure(1) ; clf ; imagesc(im) ;
 title(sprintf('%s (%d), score %.3f',...
 net.meta.classes.description{best}, best, bestScore)) ;

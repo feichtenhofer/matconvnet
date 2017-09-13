@@ -37,14 +37,14 @@ opts.saveSolverState = true ;
 opts.nesterovUpdate = false ;
 opts.randomSeed = 0 ;
 opts.profile = false ;
-opts.parameterServer.method = 'mmap' ;
+opts.parameterServer.method = 'tmove' ;
 opts.parameterServer.prefix = 'mcn' ;
 
 opts.derOutputs = {'objective', 1} ;
 opts.extractStatsFn = @extractStats ;
 opts.plotStatistics = true;
 opts.postEpochFn = [] ;  % postEpochFn(net,params,state) called after each epoch; can return a new learning rate, 0 to stop, [] for no change
-opts = vl_argparse(opts, varargin) ;
+[opts, varargin] = vl_argparse(opts, varargin) ;
 
 if ~exist(opts.expDir, 'dir'), mkdir(opts.expDir) ; end
 if isempty(opts.train), opts.train = find(imdb.images.set==1) ; end
@@ -176,6 +176,7 @@ function [net, state] = processEpoch(net, state, params, mode)
 % spmd caller.
 
 % initialize with momentum 0
+if isfield(state, 'momentum'), state.solverState = state.momentum; state.momentum = []; end
 if isempty(state) || isempty(state.solverState)
   state.solverState = cell(1, numel(net.params)) ;
   state.solverState(:) = {0} ;
@@ -216,6 +217,7 @@ num = 0 ;
 epoch = params.epoch ;
 subset = params.(mode) ;
 adjustTime = 0 ;
+moreopts = [];
 
 stats.num = 0 ; % return something even if subset = []
 stats.time = 0 ;
@@ -234,23 +236,45 @@ for t=1:params.batchSize:numel(subset)
     num = num + numel(batch) ;
     if numel(batch) == 0, continue ; end
 
-    inputs = params.getBatch(params.imdb, batch) ;
+    inputs = params.getBatch(params.imdb, batch, moreopts) ;
+
+    moreopts.frameList = [];
+%     if strcmp(net.mode, 'test') && strcmp(params.valmode,'temporalStrideRandom')
+%       for i = 2:4:numel(inputs)
+%         sz = size(inputs{i});
+%         inputs{i} = gather(inputs{i});
+%         nFramesPerVid = sz(5)/moreopts.numAugments;
+%         chunks = ceil(nFramesPerVid / params.nFramesPerVid); 
+%         inputs{i} = reshape(inputs{i}, sz(1), sz(2), sz(3),   [], params.nFramesPerVid);
+%         inputs{i} = permute(inputs{i} , [1 2 3 5 4]);
+%       end
+%     end
+    net.meta.curNumFrames = repmat(size(inputs{2},4) / numel(inputs{4}),1,numel(net.layers)); % nFrames = instances/labels
+        
+    net.meta.curBatchSize = numel(batch);
 
     if params.prefetch
       if s == params.numSubBatches
-        batchStart = t + (labindex-1) + params.batchSize ;
-        batchEnd = min(t+2*params.batchSize-1, numel(subset)) ;
+        batchStartNext = t + (labindex-1) + params.batchSize ;
+        batchEndNext = min(t+2*params.batchSize-1, numel(subset)) ;
       else
-        batchStart = batchStart + numlabs ;
+        batchStartNext = batchStart + numlabs ; batchEndNext = batchEnd;
       end
-      nextBatch = subset(batchStart : params.numSubBatches * numlabs : batchEnd) ;
-      params.getBatch(params.imdb, nextBatch) ;
+      nextBatch = subset(batchStartNext : params.numSubBatches * numlabs : batchEndNext) ;
+      if ~isempty(nextBatch)
+        moreopts.frameList = params.getBatch(params.imdb, nextBatch, moreopts) ;
+      else 
+        moreopts.frameList = NaN ;
+      end
     end
 
     if strcmp(mode, 'train')
       net.mode = 'normal' ;
       net.accumulateParamDers = (s ~= 1) ;
       net.eval(inputs, params.derOutputs, 'holdOn', s < params.numSubBatches) ;
+%                     fprintf('holdon s=%d; numSubBatches=%d, %d\n', s, params.numSubBatches, single(s < params.numSubBatches)) ;
+% s < params.numSubBatches
+
     else
       net.mode = 'test' ;
       net.eval(inputs) ;

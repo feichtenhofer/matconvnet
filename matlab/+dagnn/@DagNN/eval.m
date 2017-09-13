@@ -116,6 +116,9 @@ end
 
 if ~obj.computingDerivative, return ; end
 
+obj.holdOn = opts.holdOn ;
+
+
 if obj.backpropDepth
 for l = obj.executionOrder
   [obj.vars(obj.layers(l).inputIndexes).value] = deal([]) ;
@@ -134,7 +137,6 @@ for i = 1:2:numel(derOutputs)
       end
   end
 end
-derOutputs = [] ;
 
 obj.numPendingVarRefs = zeros(1, numel(obj.vars)) ;
 obj.numPendingParamRefs = zeros(1, numel(obj.params)) ;

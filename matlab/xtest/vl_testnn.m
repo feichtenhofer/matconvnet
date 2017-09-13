@@ -38,8 +38,8 @@ function vl_testnn(varargin)
 % This file is part of the VLFeat library and is made available under
 % the terms of the BSD license (see the COPYING file).
 
-opts.cpu = true ;
-opts.gpu = false ;
+opts.cpu = false ;
+opts.gpu = true ;
 opts.single = true ;
 opts.double = false ;
 opts.command = 'nn' ;

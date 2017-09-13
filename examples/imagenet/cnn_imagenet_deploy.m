@@ -11,7 +11,9 @@ else
 end
 
 if isDag
-  net.addLayer('prob', dagnn.SoftMax(), 'prediction', 'prob', {}) ;
+  if isempty(dagFindLayersOfType(net, 'dagnn.SoftMax'))
+    net.addLayer('prob', dagnn.SoftMax(), 'prediction', 'prob', {}) ;
+  end
 else
   net.layers{end+1} = struct('name', 'prob', 'type', 'softmax') ;
 end
